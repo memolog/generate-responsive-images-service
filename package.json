@@ -4,7 +4,7 @@
   "description": "Convert a image to responsive images",
   "main": "index.js",
   "scripts": {
-    "postinstall": "cd ./server && npm install"
+    "start": "cd ./server && npm start"
   },
   "author": "",
   "license": "ISC",
