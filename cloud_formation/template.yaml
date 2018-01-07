@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Push Notitaion Microservice
+Resources:
+  ConvertResponsiveImagesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: PublicRead
+      BucketName: convert-reponsive-images
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpirationRule
+            Status: Enabled
+            ExpirationInDays: '3'
+            Transitions:
+              - TransitionInDays: '1'
+                StorageClass: Glacier
+  ConvertResponsiveImagesLoggingBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: convert-reponsive-images-log
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpirationRule
+            Status: Enabled
+            ExpirationInDays: '30'
+            Transitions:
+              - TransitionInDays: '1'
+                StorageClass: Glacier
+  ApiCloudFront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: !Sub ${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com
+          Id: ConvertResponsiveImagesApi
+          CustomOriginConfig:
+            HTTPSPort: '443'
+            OriginProtocolPolicy: https-only
+          OriginPath: /Prod
+        Enabled: 'true'
+        Logging:
+          IncludeCookies: 'true'
+          Bucket: !Sub ${ConvertResponsiveImagesLoggingBucket}.s3.amazonaws.com
+        DefaultCacheBehavior:
+          TargetOriginId: ConvertResponsiveImagesApi
+          SmoothStreaming: 'false'
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: all
+          ViewerProtocolPolicy: https-only
+          AllowedMethods:
+            - GET
+            - HEAD
+  ConvertResponsiveImageApiGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ConvertResponsiveImageApiGatewayRole
+      AssumeRolePolicyDocument: 
+        Version: 2012-10-17
+        Statement: 
+          - 
+            Effect: Allow
+            Principal: 
+              Service: 
+                - apigateway.amazonaws.com
+            Action: 
+              - sts:AssumeRole
+      Path: /
+      Policies: 
+        - 
+          PolicyName: ConvertResponsiveImageApiGatewayRole
+          PolicyDocument: 
+            Version: 2012-10-17
+            Statement: 
+              - 
+                Effect: Allow
+                Action:
+                  - s3:Get*
+                Resource:
+                  - !Sub arn:aws:s3:::${ConvertResponsiveImagesBucket}/*
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title: ConvertResponsiveImages
+        schemes:
+          - https
+        paths:
+          /images/{item}:
+            get:
+              produces:
+              - application/json
+              parameters:
+                -
+                  name: item
+                  in: path
+                  required: true
+                  type: string
+              responses:
+                '200':
+                  description: 200 response
+                  headers:
+                    content-type:
+                      type: string
+                    Content-Type:
+                      type: string
+                '400':
+                  description: 400 response
+                '500':
+                  description: 500 response
+              x-amazon-apigateway-integration:
+                credentials: !Sub arn:aws:iam::${AWS::AccountId}:role/ConvertResponsiveImageApiGatewayRole
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.content-type: integration.response.header.content-type
+                      method.response.header.Content-Type: integration.response.header.Content-Type
+                requestParameters:
+                  integration.request.path.object: method.request.path.item
+                uri:
+                  !Sub arn:aws:apigateway:${AWS::Region}:s3:path/${ConvertResponsiveImagesBucket}/{object}
+                passthroughBehavior: when_no_match
+                httpMethod: GET
+                type: aws
+        x-amazon-apigateway-binary-media-types:
+          - image/gif
+          - image/jpeg
+          - image/png
+          - image/webp
+      StageName: Prod
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/prod

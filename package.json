@@ -1,0 +1,12 @@
+{
+  "name": "convert-responsive-images",
+  "version": "1.0.0",
+  "description": "Convert a image to responsive images",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "cd ./server && npm install"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}

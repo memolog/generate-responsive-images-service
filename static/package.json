@@ -1,0 +1,26 @@
+{
+  "name": "convert-responsive-images-static",
+  "version": "1.0.0",
+  "description": "Convert a image to responsive images (Static files)",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "author": "Yutaka Yamaguchi",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-preact": "^1.1.0",
+    "preact": "^8.2.7",
+    "webpack": "^3.10.0"
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "preact"
+    ],
+    "plugins": []
+  }
+}
