@@ -2,6 +2,7 @@ cloud_formation/output-template.yaml
 server/node_modules
 server/yarn-error.log
 static/node_modules
+static/public/images/*
 static/public/images/*.jpg
 static/public/images/*.jpeg
 static/public/images/*.png

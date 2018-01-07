@@ -92,11 +92,16 @@ Resources:
         schemes:
           - https
         paths:
-          /images/{item}:
+          /images/{dir}/{item}:
             get:
               produces:
               - application/json
               parameters:
+                -
+                  name: dir
+                  in: path
+                  required: true
+                  type: string
                 -
                   name: item
                   in: path
@@ -123,9 +128,10 @@ Resources:
                       method.response.header.content-type: integration.response.header.content-type
                       method.response.header.Content-Type: integration.response.header.Content-Type
                 requestParameters:
+                  integration.request.path.dir: method.request.path.dir
                   integration.request.path.object: method.request.path.item
                 uri:
-                  !Sub arn:aws:apigateway:${AWS::Region}:s3:path/${ConvertResponsiveImagesBucket}/{object}
+                  !Sub arn:aws:apigateway:${AWS::Region}:s3:path/${ConvertResponsiveImagesBucket}/{dir}/{object}
                 passthroughBehavior: when_no_match
                 httpMethod: GET
                 type: aws

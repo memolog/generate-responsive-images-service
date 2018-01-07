@@ -1,14 +1,26 @@
 const webpack = require('webpack');
 const path = require('path');
+const ExtractTextPlugin = require("extract-text-webpack-plugin");
+
+const extractSass = new ExtractTextPlugin({
+  filename: "css/global.css",
+  disable: false
+});
+
+const staticCSSFiles = [
+	path.resolve(__dirname, './src/style/app.scss')
+]
 
 module.exports = {
 	context: path.resolve(__dirname, 'src'),
-	entry: path.resolve(__dirname, 'src/app.tsx'),
+	entry: [
+		path.resolve(__dirname, 'src/app.tsx')
+	],
 
 	output: {
-		path: path.resolve(__dirname, 'public/js'),
+		path: path.resolve(__dirname, 'public'),
 		publicPath: '/',
-		filename: 'bundle.js'
+		filename: 'js/bundle.js'
 	},
 
 	resolve: {
@@ -34,17 +46,48 @@ module.exports = {
 				use: 'ts-loader'
 			}, {
 				test: /\.scss$/,
-				exclude: /node_modules/,
+				include: staticCSSFiles,
+				use: extractSass.extract({
+					use: [
+						{
+							loader: 'css-loader'
+						}, {
+							loader: 'postcss-loader'
+						}, {
+							loader: 'sass-loader'
+						}
+					],
+					fallback: 'style-loader'
+				})
+			},
+			{
+				test: /\.scss$/,
+				exclude: staticCSSFiles,
 				use: [{
 					loader: 'style-loader'
-				},{
+				}, {
 					loader: 'css-loader'
 				}, {
 					loader: 'postcss-loader'
 				}, {
 					loader: 'sass-loader'
 				}]
+			}, {
+				test: /\.html$/,
+				use: {
+					loader: 'html-loader',
+					options: {
+						minimize: true,
+						conservativeCollapse: false,
+						removeAttributeQuotes: false,
+						caseSensitive: true
+					}
+				}
 			}
 		]
-	}
+	},
+
+	plugins: [
+		extractSass
+	]
 };
