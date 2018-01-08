@@ -12,7 +12,7 @@ function resizeImage(buffer, size, name, ext, scale) {
   return new Promise((fulfill, reject) => {
     scale = scale || 1;
     ext = ext.replace(/^\./, '');
-    const scaleStr = scale === 1 ? '' : `@${scale}`;
+    const scaleStr = scale === 1 ? '' : `@${scale}x`;
     const relativePath = `images/${name}/${name}_${size}${scaleStr}.${ext}`
     const filePath = path.resolve(__dirname, `../static/public/${relativePath}`);
   

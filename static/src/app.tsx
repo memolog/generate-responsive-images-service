@@ -19,16 +19,12 @@ function ImagePreview(props) {
 function LargeImagePreview(props) {
   const src: HTMLImageElement = props && props.src;
   if (!src) {return null }
-  console.log(src)
-  console.log(src.naturalWidth)
   const imageWidth = src.naturalWidth;
   let imageHeight = src.naturalHeight;
   let marginHeight = 0;
   if (window.innerWidth < imageWidth) {
     imageHeight = Math.floor((window.innerWidth / imageWidth) * imageHeight)
   }
-  console.log(window.innerHeight);
-  console.log(imageHeight);
   if (window.innerHeight > imageHeight + 90 ){
     marginHeight = Math.floor((window.innerHeight - imageHeight - 90) / 2)
   }
