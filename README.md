@@ -1,8 +1,8 @@
-# convert-a-image-to-responsive-images
-Generate responsive images from an original image on localhost (only support for Mac)
+# Generate responsive images
+Generate static responsive images from one original image on localhost (only support for Mac)
 
 ```
-git@github.com:memolog/convert-a-image-to-responsive-images.git
+git@github.com:memolog/generate-responsive-images.git
 npm install
 npm start
 ```
