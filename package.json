@@ -1,7 +1,7 @@
 {
-  "name": "convert-responsive-images",
+  "name": "generate-responsive-images",
   "version": "1.0.0",
-  "description": "Convert a image to responsive images",
+  "description": "Generate static responsive images from one image",
   "main": "index.js",
   "scripts": {
     "start": "cd ./server && npm start",
