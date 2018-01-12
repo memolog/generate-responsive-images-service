@@ -1113,16 +1113,12 @@ function LargeImagePreview(props) {
     if (!src) {
         return null;
     }
-    console.log(src);
-    console.log(src.naturalWidth);
     const imageWidth = src.naturalWidth;
     let imageHeight = src.naturalHeight;
     let marginHeight = 0;
     if (window.innerWidth < imageWidth) {
         imageHeight = Math.floor((window.innerWidth / imageWidth) * imageHeight);
     }
-    console.log(window.innerHeight);
-    console.log(imageHeight);
     if (window.innerHeight > imageHeight + 90) {
         marginHeight = Math.floor((window.innerHeight - imageHeight - 90) / 2);
     }
@@ -1187,16 +1183,24 @@ class App extends preact_1.Component {
         const uploadFile = fileElement.files[0];
         const formData = new FormData();
         formData.append('image', uploadFile);
-        fetch('http://localhost:3000/convert', {
+        const name = encodeURIComponent(uploadFile.name);
+        const size = 750;
+        // if you want to use local server change the following domain value
+        // `http://localhost:3000`
+        const domain = location.hostname === 'memolog.github.ios' ? 'https://d1as7513jtcnco.cloudfront.net' : `http://localhost:3000`;
+        const endpoint = `${domain}/images?name=${name}&size=${size}`;
+        fetch(endpoint, {
             method: 'POST',
-            body: formData
+            body: uploadFile
         })
             .then((resp) => {
             return resp.json();
         })
             .then((data) => {
+            const filePaths = data && data.filePaths || [];
+            const images = filePaths.map(filePath => `${domain}/${filePath}`);
             this.setState({
-                images: data && data.filePaths || []
+                images: images
             });
         })
             .catch(err => console.log(err));

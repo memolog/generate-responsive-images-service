@@ -1,3 +1,4 @@
+cloud_formation/lambda_function/node_modules
 cloud_formation/output-template.yaml
 server/node_modules
 server/yarn-error.log

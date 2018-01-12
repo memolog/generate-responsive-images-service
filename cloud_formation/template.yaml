@@ -2,25 +2,27 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Generate responsive images from an original one
 Resources:
-  ConvertResponsiveImagesBucket:
+  GenerateResponsiveImagesBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       AccessControl: PublicRead
-      BucketName: convert-reponsive-images
+      BucketName: generate-reponsive-images
       LifecycleConfiguration:
         Rules:
           - Id: ExpirationRule
             Status: Enabled
             ExpirationInDays: '3'
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: '1'
             Transitions:
               - TransitionInDays: '1'
                 StorageClass: Glacier
-  ConvertResponsiveImagesLoggingBucket:
+  GenerateResponsiveImagesLoggingBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: convert-reponsive-images-log
+      BucketName: generate-reponsive-images-log
       LifecycleConfiguration:
         Rules:
           - Id: ExpirationRule
@@ -35,7 +37,7 @@ Resources:
       DistributionConfig:
         Origins:
         - DomainName: !Sub ${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com
-          Id: ConvertResponsiveImagesApi
+          Id: GenerateResponsiveImagesApi
           CustomOriginConfig:
             HTTPSPort: '443'
             OriginProtocolPolicy: https-only
@@ -43,22 +45,27 @@ Resources:
         Enabled: 'true'
         Logging:
           IncludeCookies: 'true'
-          Bucket: !Sub ${ConvertResponsiveImagesLoggingBucket}.s3.amazonaws.com
+          Bucket: !Sub ${GenerateResponsiveImagesLoggingBucket}.s3.amazonaws.com
         DefaultCacheBehavior:
-          TargetOriginId: ConvertResponsiveImagesApi
+          TargetOriginId: GenerateResponsiveImagesApi
           SmoothStreaming: 'false'
           ForwardedValues:
-            QueryString: 'false'
+            QueryString: 'true'
             Cookies:
               Forward: all
           ViewerProtocolPolicy: https-only
           AllowedMethods:
             - GET
             - HEAD
-  ConvertResponsiveImageApiGatewayRole:
+            - OPTIONS
+            - PUT
+            - POST
+            - PATCH
+            - DELETE
+  GenerateResponsiveImagesApiGatewayRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: ConvertResponsiveImageApiGatewayRole
+      RoleName: GenerateResponsiveImagesApiGatewayRole
       AssumeRolePolicyDocument: 
         Version: 2012-10-17
         Statement: 
@@ -72,7 +79,7 @@ Resources:
       Path: /
       Policies: 
         - 
-          PolicyName: ConvertResponsiveImageApiGatewayRole
+          PolicyName: GenerateResponsiveImagesApiGatewayRole
           PolicyDocument: 
             Version: 2012-10-17
             Statement: 
@@ -81,30 +88,80 @@ Resources:
                 Action:
                   - s3:Get*
                 Resource:
-                  - !Sub arn:aws:s3:::${ConvertResponsiveImagesBucket}/*
+                  - !Sub ${GenerateResponsiveImagesBucket.Arn}/*
   ApiGatewayApi:
     Type: AWS::Serverless::Api
     Properties:
       DefinitionBody:
         swagger: 2.0
         info:
-          title: ConvertResponsiveImages
+          title: GenerateResponsiveImages
         schemes:
           - https
         paths:
-          /images/{dir}/{item}:
+          /images:
+            post:
+              produces:
+              - application/json
+              parameters:
+                -
+                  name: size
+                  in: query
+                  required: true
+                  type: string
+                - name: name
+                  in: query
+                  required: true
+                  type: string
+              responses:
+                '200':
+                  description: 200 response
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                uri:
+                  !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GenerateResponsiveImageFunction.Arn}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            options:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+                '400':
+                  description: 400 response
+                '500':
+                  description: 500 response
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type'"
+                      method.response.header.Access-Control-Allow-Origin: "'memolog.github.io'"
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                type: mock
             get:
               produces:
               - application/json
               parameters:
                 -
-                  name: dir
-                  in: path
-                  required: true
-                  type: string
-                -
-                  name: item
-                  in: path
+                  name: key
+                  in: query
                   required: true
                   type: string
               responses:
@@ -120,7 +177,7 @@ Resources:
                 '500':
                   description: 500 response
               x-amazon-apigateway-integration:
-                credentials: !Sub arn:aws:iam::${AWS::AccountId}:role/ConvertResponsiveImageApiGatewayRole
+                credentials: !Sub ${GenerateResponsiveImagesApiGatewayRole.Arn}
                 responses:
                   default:
                     statusCode: 200
@@ -128,10 +185,9 @@ Resources:
                       method.response.header.content-type: integration.response.header.content-type
                       method.response.header.Content-Type: integration.response.header.Content-Type
                 requestParameters:
-                  integration.request.path.dir: method.request.path.dir
-                  integration.request.path.object: method.request.path.item
+                  integration.request.path.key: method.request.querystring.key
                 uri:
-                  !Sub arn:aws:apigateway:${AWS::Region}:s3:path/${ConvertResponsiveImagesBucket}/{dir}/{object}
+                  !Sub arn:aws:apigateway:${AWS::Region}:s3:path/${GenerateResponsiveImagesBucket}/{key}
                 passthroughBehavior: when_no_match
                 httpMethod: GET
                 type: aws
@@ -141,6 +197,52 @@ Resources:
           - image/png
           - image/webp
       StageName: Prod
+  GenerateResponsiveImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub GenerateResponsiveImageFunction
+      Handler: index.generate
+      Runtime: nodejs6.10
+      CodeUri: ./lambda_function
+      Policies: AWSLambdaBasicExecutionRole
+      MemorySize: 128
+      Timeout: 10
+      Events:
+        PostResource:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /images
+            Method: post
+      Environment:
+        Variables:
+          Bucket: !Ref GenerateResponsiveImagesBucket
+          accessKeyId: !Ref AWSLambdaUserAccessKey
+          secretAccessKey: !GetAtt AWSLambdaUserAccessKey.SecretAccessKey
+  AWSLambdaUserPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: AWSLambdaUserPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Sub ${GenerateResponsiveImagesBucket.Arn}/*
+  AWSLambdaUser:
+    Type: AWS::IAM::User
+    Properties:
+      ManagedPolicyArns: 
+        - !Ref AWSLambdaUserPolicy
+      UserName: generate-responsive-images-lambda
+  AWSLambdaUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties: 
+      Status: Active
+      UserName: !Ref AWSLambdaUser
 Outputs:
   ApiUrl:
     Value: !Sub https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/prod

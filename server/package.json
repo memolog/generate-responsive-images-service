@@ -1,7 +1,7 @@
 {
-  "name": "convert-responsive-images-server",
+  "name": "generate-responsive-images-server",
   "version": "1.0.0",
-  "description": "Convert a image to responsive images (Server Side)",
+  "description": "Generate responsive images (Server Side)",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,7 +10,7 @@
   "author": "Yutaka Yamaguchi",
   "license": "ISC",
   "dependencies": {
-    "busboy": "^0.2.14",
+    "body-parser": "^1.18.2",
     "express": "^4.16.2",
     "mkdirp": "^0.5.1",
     "serve-static": "^1.13.1",
