@@ -86,12 +86,12 @@ class App extends Component<AppProps, AppState> {
 	submitHandler(event){
 		event.preventDefault();
 		event.stopPropagation();
-    
+
     const fileElement = document.getElementById('upload-image');
     if (!(fileElement instanceof HTMLInputElement)) {
       return;
     }
-    
+
     const uploadFile = fileElement.files[0];
     const formData = new FormData();
     formData.append('image', uploadFile);
@@ -101,7 +101,7 @@ class App extends Component<AppProps, AppState> {
 
     // if you want to use local server change the following domain value
     // `http://localhost:3000`
-    const domain = location.hostname === 'memolog.github.ios' ? 'https://d1as7513jtcnco.cloudfront.net' : `http://localhost:3000`;
+    const domain = location.hostname === 'memolog.github.io' ? 'https://d1as7513jtcnco.cloudfront.net' : `http://localhost:3000`;
     const endpoint = `${domain}/images?name=${name}&size=${size}`;
 
     fetch(endpoint, {
@@ -123,7 +123,7 @@ class App extends Component<AppProps, AppState> {
   onChangeHandler(event) {
     const files = event.target.files
     const file = files && files.length && files[0];
-    if (!file) { 
+    if (!file) {
       this.setState({
         imagePreviewSrc: null
       });
@@ -145,7 +145,7 @@ class App extends Component<AppProps, AppState> {
       img.onload = () => {
         this.setState({
           responsiveImagePreviewSrc: img
-        });          
+        });
       }
       img.src = link.href;
     }
@@ -166,7 +166,7 @@ class App extends Component<AppProps, AppState> {
     const imageStyle = {
       maxWidth: 50
     }
-    
+
 		return (
       <div>
         <h1 style={h1Style}>Generate static responsive images</h1>
