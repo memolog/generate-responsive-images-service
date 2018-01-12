@@ -4,7 +4,6 @@
   "description": "Generate responsive images (Server Side)",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
   "author": "Yutaka Yamaguchi",
@@ -15,8 +14,5 @@
     "mkdirp": "^0.5.1",
     "serve-static": "^1.13.1",
     "sharp": "^0.18.4"
-  },
-  "devDependencies": {
-    "extract-text-webpack-plugin": "^3.0.2"
   }
 }

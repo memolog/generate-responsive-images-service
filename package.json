@@ -4,6 +4,8 @@
   "description": "Generate static responsive images from one image",
   "main": "index.js",
   "scripts": {
+    "install": "cd ./server && npm install",
+    "develop": "cd ./static/src && npm install",
     "start": "cd ./server && npm start",
     "build": "cd ./static && npm run build"
   },

@@ -251,5 +251,7 @@ Resources:
       Status: Active
       UserName: !Ref AWSLambdaUser
 Outputs:
-  ApiUrl:
-    Value: !Sub https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/prod
+  GatewayApiUrl:
+    Value: !Sub https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+  CloudFrontDomain:
+    Value: !GetAtt ApiCloudFront.DomainName
