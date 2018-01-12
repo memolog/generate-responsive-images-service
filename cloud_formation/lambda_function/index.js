@@ -123,9 +123,9 @@ function generateResizeImageBuffer(data){
     const key = `${data.name}/${data.name}_${data.size}${scaleStr}.${data.ext}`;
 
     let sharpObject = data.sharpObject;
-    sharpObject = sharpObject.resize(750);
+    sharpObject = sharpObject.resize(data.size*scale);
     if (data.ext === 'webp') {
-      sharpObject.webp();
+      sharpObject = sharpObject.webp();
     }
     sharpObject.toBuffer((err, buffer) => {
       if (err) {
@@ -181,12 +181,6 @@ exports.generate = (event, context, callback) => {
     size: 750,
     name: name,
     ext: ext,
-    scale: 1
-  }, {
-    sharpObject: sharpObject,
-    size: 750,
-    name: name,
-    ext: ext,
     scale: 2
   }, {
     sharpObject: sharpObject,
@@ -194,30 +188,6 @@ exports.generate = (event, context, callback) => {
     name: name,
     ext: 'webp',
     scale: 1
-  }, {
-    sharpObject: sharpObject,
-    size: 750,
-    name: name,
-    ext: 'webp',
-    scale: 2
-  }, {
-    sharpObject: sharpObject,
-    size: 450,
-    name: name,
-    ext: ext,
-    scale: 1
-  }, {
-    sharpObject: sharpObject,
-    size: 450,
-    name: name,
-    ext: ext,
-    scale: 2
-  }, {
-    sharpObject: sharpObject,
-    size: 450,
-    name: name,
-    ext: ext,
-    scale: 3
   }].map(data => generateResizeImageBuffer(data));
 
   Promise.all(promises).then((resizeImages) => {
@@ -225,7 +195,7 @@ exports.generate = (event, context, callback) => {
     return Promise.all(promises);
   })
   .then((datas) => {
-    const filePaths = datas.map(data => `images?key=${encodeURIComponent(data)}`);
+    const filePaths = datas.map(data => `images/${data}`);
     callback(null, {
       statusCode: 200,
       headers: {

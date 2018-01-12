@@ -66,24 +66,24 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: GenerateResponsiveImagesApiGatewayRole
-      AssumeRolePolicyDocument: 
+      AssumeRolePolicyDocument:
         Version: 2012-10-17
-        Statement: 
-          - 
+        Statement:
+          -
             Effect: Allow
-            Principal: 
-              Service: 
+            Principal:
+              Service:
                 - apigateway.amazonaws.com
-            Action: 
+            Action:
               - sts:AssumeRole
       Path: /
-      Policies: 
-        - 
+      Policies:
+        -
           PolicyName: GenerateResponsiveImagesApiGatewayRole
-          PolicyDocument: 
+          PolicyDocument:
             Version: 2012-10-17
-            Statement: 
-              - 
+            Statement:
+              -
                 Effect: Allow
                 Action:
                   - s3:Get*
@@ -150,18 +150,24 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type'"
-                      method.response.header.Access-Control-Allow-Origin: "'memolog.github.io'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
+          /images/{dir}/{object}:
             get:
               produces:
               - application/json
               parameters:
                 -
-                  name: key
-                  in: query
+                  name: dir
+                  in: path
+                  required: true
+                  type: string
+                -
+                  name: object
+                  in: path
                   required: true
                   type: string
               responses:
@@ -185,9 +191,10 @@ Resources:
                       method.response.header.content-type: integration.response.header.content-type
                       method.response.header.Content-Type: integration.response.header.Content-Type
                 requestParameters:
-                  integration.request.path.key: method.request.querystring.key
+                  integration.request.path.dir: method.request.path.dir
+                  integration.request.path.object: method.request.path.object
                 uri:
-                  !Sub arn:aws:apigateway:${AWS::Region}:s3:path/${GenerateResponsiveImagesBucket}/{key}
+                  !Sub arn:aws:apigateway:${AWS::Region}:s3:path/${GenerateResponsiveImagesBucket}/{dir}/{object}
                 passthroughBehavior: when_no_match
                 httpMethod: GET
                 type: aws
@@ -235,12 +242,12 @@ Resources:
   AWSLambdaUser:
     Type: AWS::IAM::User
     Properties:
-      ManagedPolicyArns: 
+      ManagedPolicyArns:
         - !Ref AWSLambdaUserPolicy
       UserName: generate-responsive-images-lambda
   AWSLambdaUserAccessKey:
     Type: AWS::IAM::AccessKey
-    Properties: 
+    Properties:
       Status: Active
       UserName: !Ref AWSLambdaUser
 Outputs:
