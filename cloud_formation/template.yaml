@@ -212,8 +212,8 @@ Resources:
       Runtime: nodejs6.10
       CodeUri: ./lambda_function
       Policies: AWSLambdaBasicExecutionRole
-      MemorySize: 128
-      Timeout: 10
+      MemorySize: 1536
+      Timeout: 3
       Events:
         PostResource:
           Type: Api

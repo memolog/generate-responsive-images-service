@@ -176,18 +176,6 @@ exports.generate = (event, context, callback) => {
     name: name,
     ext: ext,
     scale: 1
-  }, {
-    sharpObject: sharpObject,
-    size: 750,
-    name: name,
-    ext: ext,
-    scale: 2
-  }, {
-    sharpObject: sharpObject,
-    size: 750,
-    name: name,
-    ext: 'webp',
-    scale: 1
   }].map(data => generateResizeImageBuffer(data));
 
   Promise.all(promises).then((resizeImages) => {
