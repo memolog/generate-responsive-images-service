@@ -1,0 +1,29 @@
+{
+  "preset": [{
+    "size": 750
+  }, {
+    "size": 750,
+    "scale": 2
+  }, {
+    "size": 750,
+    "ext": "webp"
+  }, {
+    "size": 750,
+    "ext": "webp",
+    "scale": 2
+  }, {
+    "size": 450
+  }, {
+    "size": 450,
+    "scale": 2
+  }, {
+    "size": 450,
+    "scale": 3
+  }],
+  "jpeg": {
+    "quality": 80,
+    "trellisQuantisation": true,
+    "overshootDeringing": true,
+    "optimiseScans": true
+  }
+}

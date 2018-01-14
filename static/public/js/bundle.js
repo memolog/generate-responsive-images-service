@@ -1187,7 +1187,7 @@ class App extends preact_1.Component {
         const size = 750;
         // if you want to use local server change the following domain value
         // `http://localhost:3000`
-        const domain = location.hostname === 'memolog.github.io' ? 'https://d1as7513jtcnco.cloudfront.net' : `http://localhost:3000`;
+        const domain = 'http://localhost:3000';
         const endpoint = `${domain}/images?name=${name}&size=${size}`;
         fetch(endpoint, {
             method: 'POST',

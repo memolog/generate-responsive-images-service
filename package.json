@@ -10,5 +10,6 @@
     "build": "cd ./static && npm run build"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {}
 }
