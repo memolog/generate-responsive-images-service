@@ -82,10 +82,22 @@
               "lambda:*"
           ],
           "Resource": [
+              "arn:aws:lambda:*:*:function:UploadResponsiveImageFunction",
               "arn:aws:lambda:*:*:function:GenerateResponsiveImageFunction"
           ],
           "Effect": "Allow"
       },
+      {
+        "Action": [
+            "lambda:ListTags",
+            "lambda:TagResource",
+            "lambda:UntagResource"
+        ],
+        "Resource": [
+            "*"
+        ],
+        "Effect": "Allow"
+    },
       {
           "Action": [
               "cloudfront:GetDistribution",

@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const sharp = require('sharp');
 const path = require('path');
+const config = require('./config.json');
 
 function uploadPart(s3bucket, multipart, partParams, multipartMap, tryNum){
   return new Promise((fulfill, reject) => {
@@ -32,6 +33,28 @@ function uploadPart(s3bucket, multipart, partParams, multipartMap, tryNum){
 
       fulfill();
     });
+  })
+}
+
+function get(data){
+  s3bucket = new AWS.S3({
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey,
+    params: {
+      Bucket: process.env.Bucket
+    }
+  });
+
+  return new Promise((fulfill, reject) => {
+    s3bucket.getObject({
+      Key: data.key
+    }, (err, data) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      fulfill(data);
+    })
   })
 }
 
@@ -118,15 +141,36 @@ function upload(data){
 
 function generateResizeImageBuffer(data){
   return new Promise((fulfill, reject) => {
-    const scale = data.scale || 1;
-    const scaleStr = scale === 1 ? '' : `@${scale}x`;
-    const key = `${data.name}/${data.name}_${data.size}${scaleStr}.${data.ext}`;
+    let {sharpObject, dir, size, name, ext, scale} = data;
+    const imageSize = config.imageSize || {};
 
-    let sharpObject = data.sharpObject;
-    sharpObject = sharpObject.resize(data.size*scale);
-    if (data.ext === 'webp') {
-      sharpObject = sharpObject.webp();
+    let sizeInt = parseInt(imageSize[size], 10);
+    if (!sizeInt) {
+      reject(new Error('The size parameter is invalid'));
+      return;
     }
+
+    scale = scale || 1;
+    const scaleStr = scale === 1 ? '' : `@${scale}x`;
+    const key = `${dir}/${name}_${size}${scaleStr}.${ext}`;
+
+    sharpObject = sharpObject.resize(sizeInt*scale);
+    let contentType;
+
+    switch (ext) {
+      case 'webp':
+        sharpObject = sharpObject.webp();
+        contentType = 'image/webp';
+        break;
+      case 'png':
+        sharpObject = sharpObject.png();
+        contentType = 'image/png';
+        break;
+      default:
+        sharpObject = sharpObject.jpeg();
+        contentType = 'image/jpeg';
+    }
+
     sharpObject.toBuffer((err, buffer) => {
       if (err) {
         reject(err);
@@ -135,26 +179,18 @@ function generateResizeImageBuffer(data){
       fulfill({
         key: key,
         buffer: buffer,
-        contentType: 'image/jpeg'
+        contentType: contentType
       });
     });
   });
 }
 
-exports.generate = (event, context, callback) => {
-  let s3bucket, multipart, multipartMap;
-  const resizeImages = [];
+exports.uploadImage = (event, context, callback) => {
   const query = event.queryStringParameters || {};
   const filename = query.name || '';
 
   if (!filename) {
     callback(new Error('File name is required'));
-    return;
-  }
-
-  const size = parseInt(query.size, 10) || 0;
-  if (!size) {
-    callback(new Error('Size parameter must be integer'));
     return;
   }
 
@@ -167,23 +203,21 @@ exports.generate = (event, context, callback) => {
   const filePath = path.parse(filename);
   const name = filePath.name;
   const ext = filePath.ext.replace(/^\./, '');
-  const origBuffer = Buffer.from(image, 'base64');
+  const buffer = Buffer.from(image, 'base64');
+  const contentType = (event && event.headers && event.headers['Content-Type']) || 'image/jpeg';
 
-  const sharpObject = sharp(origBuffer);
-  const promises = [{
-    sharpObject: sharpObject,
-    size: size,
-    name: name,
-    ext: ext,
-    scale: 1
-  }].map(data => generateResizeImageBuffer(data));
-
-  Promise.all(promises).then((resizeImages) => {
-    const promises = resizeImages.map(data => upload(data));
-    return Promise.all(promises);
+  upload({
+    key: `${name}/${name}.${ext}`,
+    buffer: buffer,
+    contentType: contentType
   })
-  .then((datas) => {
-    const filePaths = datas.map(data => `images/${data}`);
+  .then((data) => {
+    const filePaths = [
+      `images/${name}/${name}.${ext}?size=medium`,
+      `images/${name}/${name}.webp?orig=${ext}&size=medium`,
+      `images/${name}/${name}.${ext}?size=small`,
+      `images/${name}/${name}@2x.${ext}?size=small`,
+    ];
     callback(null, {
       statusCode: 200,
       headers: {
@@ -192,10 +226,82 @@ exports.generate = (event, context, callback) => {
       body: JSON.stringify({
         filePaths: filePaths
       })
-    });
+    })
+  });
+}
+
+exports.generate = (event, context, callback) => {
+  let buffer, contentType;
+
+  const resizeImages = [];
+  const {dir, object} = event.pathParameters || {};
+  let {orig, size} = event.queryStringParameters || {};
+  let [_, name, scale, ext] = object.match(/^(.+?)(?:@([\d]+)x)?\.([\w]+)$/);
+  size = size || 'small';
+  orig = orig || ext;
+  scale = parseInt(scale, 10) || 1;
+
+  const scaleStr = scale === 1 ? '' : `@${scale}x`;
+
+  if (!name) {
+    callback(new Error('No image name found'));
+    return;
+  }
+
+  get({
+    key: `${dir}/${name}_${size}${scaleStr}.${ext}`
+  })
+  .then((data) => {
+    callback(null, {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin' : '*',
+        'Content-Type': data.ContentType
+      },
+      body: data.Body.toString('base64'),
+      isBase64Encoded: true
+    })
   })
   .catch((err) => {
-    console.log(err);
-    callback(err);
-  });
+    if (!(/NoSuchKey/i.test(err.code))) {
+      console.log(err);
+      callback(err);
+      return;
+    }
+
+    get({
+      key: `${dir}/${name}.${orig}`
+    }).then((data) => {
+      const origBuffer = Buffer.from(data.Body);
+      const sharpObject = sharp(origBuffer);
+      return generateResizeImageBuffer({
+        sharpObject: sharpObject,
+        dir: dir,
+        size: size,
+        name: name,
+        ext: ext,
+        scale: scale
+      });
+    })
+    .then((resizeImage) => {
+      buffer = resizeImage.buffer;
+      contentType = resizeImage.contentType;
+      return upload(resizeImage)
+    })
+    .then((data) => {
+      callback(null, {
+        statusCode: 200,
+        headers: {
+          'Access-Control-Allow-Origin' : '*',
+          'Content-Type': contentType
+        },
+        body: buffer.toString('base64'),
+        isBase64Encoded: true
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      callback(err);
+    });
+  })
 }
