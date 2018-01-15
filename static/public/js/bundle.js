@@ -1279,16 +1279,15 @@ function RespnsiveImageList(props) {
         return null;
     }
     const blockStyle = {
-        maxWidth: 400,
+        maxWidth: '100%',
         margin: '1em auto',
-        padding: '15px',
-        borderRadius: '4px',
-        border: '1px solid #bababa'
+        padding: '15px'
     };
     const listStyle = {
         listStyleType: 'none',
         margin: '0',
-        padding: '0'
+        padding: '0',
+        textAlign: 'center'
     };
     const itemStyle = {
         margin: '.5em 0'
@@ -1296,17 +1295,15 @@ function RespnsiveImageList(props) {
     const imageStyle = {
         maxHeight: 34,
         marginRight: '5px',
-        float: 'left'
+        display: 'inline-block',
+        verticalAlign: 'middle'
     };
     const linkStyle = {
-        textOverflow: 'ellipsis',
-        display: 'block',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
+        display: 'inline',
         lineHeight: '34px'
     };
     const imageElements = images.map((image) => {
-        const imageLinkLabel = (image.split(/\//) || []).pop() || 'image';
+        const imageLinkLabel = image;
         return (preact_1.h("li", { style: itemStyle },
             preact_1.h("img", { src: image, style: imageStyle }),
             preact_1.h("a", { href: image, onClick: props.clickHandler, style: linkStyle }, imageLinkLabel)));
