@@ -1,23 +1,23 @@
 {
   "preset": [{
-    "size": 750
+    "size": "medium"
   }, {
-    "size": 750,
+    "size": "medium",
     "scale": 2
   }, {
-    "size": 750,
+    "size": "medium",
     "ext": "webp"
   }, {
-    "size": 750,
+    "size": "medium",
     "ext": "webp",
     "scale": 2
   }, {
-    "size": 450
+    "size": "small"
   }, {
-    "size": 450,
+    "size": "small",
     "scale": 2
   }, {
-    "size": 450,
+    "size": "small",
     "scale": 3
   }],
   "jpeg": {
@@ -25,5 +25,9 @@
     "trellisQuantisation": true,
     "overshootDeringing": true,
     "optimiseScans": true
+  },
+  "imageSize": {
+    "medium": 750,
+    "small": 450
   }
 }

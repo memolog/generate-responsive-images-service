@@ -2,17 +2,39 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const mkdirp = require('mkdirp');
+const config = require('./config.json');
 
-function resizeImage(buffer, options, config) {
+function resizeImage(buffer, options) {
   return new Promise((fulfill, reject) => {
-    const {size, name, ext, scale} = options;
+    const {size, name, ext, scale, dist} = options;
+    const sizeStr = `_${size}`;
     const scaleStr = scale === 1 ? '' : `@${scale}x`;
-    const relativePath = `images/${name}/${name}_${size}${scaleStr}.${ext}`
-    const filePath = path.resolve(__dirname, `../static/public/${relativePath}`);
+    let relativePath, filePath;
+    if (dist) {
+      relativePath = `/${name}/${name}${sizeStr}${scaleStr}.${ext}`
+      filePath = path.resolve(__dirname, `${options.dist}${relativePath}`);
+    } else {
+      relativePath = `images/${name}/${name}${sizeStr}${scaleStr}.${ext}`
+      filePath = path.resolve(__dirname, `../static/public/${relativePath}`);
+    }
 
-    let sharpObject = sharp(buffer).resize(size * scale);
-    if (ext === 'jpg' && config.jpeg) {
-      sharpObject = sharpObject.jpeg(config.jpeg);
+    const sizeInt = parseInt(config.imageSize[size], 10);
+    if (!sizeInt) {
+      reject(new Error('The size parameter is invalid'));
+      return;
+    }
+
+    let sharpObject = sharp(buffer).resize(sizeInt * scale);
+    switch (ext) {
+      case 'webp':
+        sharpObject = sharpObject.webp();
+        break;
+      case 'png':
+        sharpObject = sharpObject.png();
+        break;
+      default:
+        const imageConfig = config.jpeg || {};
+        sharpObject = sharpObject.jpeg(imageConfig);
     }
 
     sharpObject
@@ -29,29 +51,35 @@ function resizeImage(buffer, options, config) {
 module.exports = function generateImages(buffer, options){
   return new Promise((fulfill, reject) => {
     const name = options.name;
-    const dist = options.dist || `../static/public/images/${name}`;
+    const dist =  (options.dist || '../static/public/images') + `/${name}`;
 
     try {
-      const config = JSON.parse(fs.readFileSync(path.resolve(__dirname, './config.json'), {encoding: 'utf8'}));
-
-      mkdirp(path.resolve(__dirname, dist), async (err) => {
+      mkdirp(path.resolve(__dirname, dist), (err) => {
         if (err) {
           reject(err);
           return;
         }
 
-        const conditions = config.preset;
+        fs.writeFile(path.resolve(__dirname, `${dist}/${name}.${options.ext}`), buffer, async (err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
 
-        const filePaths = [];
-        for (const cond of conditions) {
-          cond.name = name;
-          cond.ext = cond.ext || options.ext;
-          cond.scale = parseInt(cond.scale, 10) || 1;
-          const result = await resizeImage(buffer, cond, config);
-          filePaths.push(result.relativePath);
-        }
+          const conditions = config.preset;
 
-        fulfill(filePaths);
+          const filePaths = [];
+          for (const cond of conditions) {
+            cond.name = name;
+            cond.ext = cond.ext || options.ext;
+            cond.scale = parseInt(cond.scale, 10) || 1;
+            cond.dist = options.dist;
+            const result = await resizeImage(buffer, cond);
+            filePaths.push(result.relativePath);
+          }
+
+          fulfill(filePaths);
+        })
       });
     } catch (err) {
       reject(err);
