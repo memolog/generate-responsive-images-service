@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const path = require('path');
 const fs = require('fs');
 const program = require('commander');
@@ -46,7 +48,6 @@ function main(args) {
 
   const promises = [];
   for (const filePath of files) {
-    console.log(filePath);
     promises.push(readFileAndGenerate(filePath, program.dist));
   }
 
