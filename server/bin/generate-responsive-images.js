@@ -33,27 +33,30 @@ function main(args) {
 
   let files = [];
   if (program.src) {
-    const dir = path.resolve(__dirname, program.src);
+    const dir = path.resolve(program.src);
     fs.readdirSync(dir).forEach((file) => {
       const filePath = path.parse(file);
       if (/\.(png|gif|jpe?g)/i.test(filePath.ext)){
-        files.push(`${dir}/${file}`);
+        const absolutePath = path.resolve(process.cwd(), `${dir}/${file}`);
+        files.push(absolutePath);
       }
     });
   }
 
   if (program.input) {
-    files.push(path.resolve(__dirname, program.input));
+    const absolutePath = path.resolve(process.cwd(), program.input);
+    files.push(path.resolve(absolutePath));
   }
 
   const promises = [];
+  const dist = path.resolve(process.cwd(), program.dist);
   for (const filePath of files) {
-    promises.push(readFileAndGenerate(filePath, program.dist));
+    promises.push(readFileAndGenerate(filePath, dist));
   }
 
   Promise.all(promises)
     .then(()=>{
-      promise.exit(0);
+      process.exit(0);
     })
     .catch((err) => {
       process.stderr.write(JSON.stringify(err));

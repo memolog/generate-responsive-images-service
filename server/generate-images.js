@@ -6,17 +6,12 @@ const config = require('./config.json');
 
 function resizeImage(buffer, options) {
   return new Promise((fulfill, reject) => {
-    const {size, name, ext, scale, dist} = options;
+    const {size, name, ext, scale, dist, relativePath} = options;
     const sizeStr = `_${size}`;
     const scaleStr = scale === 1 ? '' : `@${scale}x`;
-    let relativePath, filePath;
-    if (dist) {
-      relativePath = `/${name}/${name}${sizeStr}${scaleStr}.${ext}`
-      filePath = path.resolve(__dirname, `${options.dist}${relativePath}`);
-    } else {
-      relativePath = `images/${name}/${name}${sizeStr}${scaleStr}.${ext}`
-      filePath = path.resolve(__dirname, `../static/public/${relativePath}`);
-    }
+
+    const filename = `${name}${sizeStr}${scaleStr}.${ext}`;
+    const filePath = `${dist}/${relativePath}/${filename}`;
 
     const sizeInt = parseInt(config.imageSize[size], 10);
     if (!sizeInt) {
@@ -43,7 +38,7 @@ function resizeImage(buffer, options) {
           reject(err);
           return;
         }
-        fulfill({relativePath});
+        fulfill({relativePath: `${relativePath}/${filename}`});
       });
   });
 }
@@ -51,16 +46,23 @@ function resizeImage(buffer, options) {
 module.exports = function generateImages(buffer, options){
   return new Promise((fulfill, reject) => {
     const name = options.name;
-    const dist =  (options.dist || '../static/public/images') + `/${name}`;
+    let dist, relativePath;
+    if (options.dist) {
+      relativePath = `${name}`;
+      dist = options.dist;
+    } else {
+      relativePath = `images/${name}`
+      dist = path.resolve(__dirname, `../static/public`);
+    }
 
     try {
-      mkdirp(path.resolve(__dirname, dist), (err) => {
+      mkdirp(`${dist}/${relativePath}`, (err) => {
         if (err) {
           reject(err);
           return;
         }
 
-        fs.writeFile(path.resolve(__dirname, `${dist}/${name}.${options.ext}`), buffer, async (err) => {
+        fs.writeFile(`${dist}/${relativePath}/${name}.${options.ext}`, buffer, async (err) => {
           if (err) {
             reject(err);
             return;
@@ -73,7 +75,8 @@ module.exports = function generateImages(buffer, options){
             cond.name = name;
             cond.ext = cond.ext || options.ext;
             cond.scale = parseInt(cond.scale, 10) || 1;
-            cond.dist = options.dist;
+            cond.dist = dist;
+            cond.relativePath = relativePath;
             const result = await resizeImage(buffer, cond);
             filePaths.push(result.relativePath);
           }
