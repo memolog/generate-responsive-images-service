@@ -1,7 +1,6 @@
 cloud_formation/lambda_function/node_modules
 cloud_formation/output-template.yaml
-server/node_modules
-server/yarn-error.log
+node_modules
 static/node_modules
 static/public/images/*
 static/public/images/*.jpg
@@ -9,4 +8,3 @@ static/public/images/*.jpeg
 static/public/images/*.png
 static/public/images/*.gif
 static/public/images/*.webp
-static/yarn-error.log
