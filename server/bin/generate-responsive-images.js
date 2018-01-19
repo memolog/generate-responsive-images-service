@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const program = require('commander');
 const generateImages = require('../generate-images');
-const pkg = require('../package.json');
+const pkg = require('../../package.json');
 
 function readFileAndGenerate(filePath, dist) {
   return new Promise((fulfill, reject) => {
