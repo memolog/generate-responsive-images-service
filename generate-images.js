@@ -62,7 +62,7 @@ module.exports = function generateImages(buffer, options){
       dist = opts.dist;
     } else {
       relativePath = opts.relativePath || `${name}`;
-      dist = path.resolve(__dirname, './');
+      dist = path.resolve(process.cwd(), '/');
     }
 
     if (opts.medium) {
