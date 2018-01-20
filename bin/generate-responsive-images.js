@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const path = require('path');
 const fs = require('fs');
 const program = require('commander');
 const generateImages = require('../generate-images');
-const pkg = require('../../package.json');
+const pkg = require('../package.json');
 
 function readFileAndGenerate(filePath, dist) {
   return new Promise((fulfill, reject) => {
@@ -55,11 +57,15 @@ function main(args) {
   }
 
   Promise.all(promises)
-    .then(()=>{
+    .then((results)=>{
+      const resutlStr = results.map((result) => {
+        return result.map(filePath => `${dist}/${filePath}`).join('\n');
+      }).join('\n');
+      process.stdout.write(`${resutlStr}\n`);
       process.exit(0);
     })
     .catch((err) => {
-      process.stderr.write(JSON.stringify(err));
+      process.stderr.write(err.stack + '\n');
       process.exit(1);
     });
 }

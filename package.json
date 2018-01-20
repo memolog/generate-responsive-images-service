@@ -2,22 +2,17 @@
   "name": "generate-responsive-images",
   "version": "1.0.4",
   "description": "Generate static responsive images from one image",
-  "main": "./server/generate-images.js",
-  "bin": "./server/bin/generate-responsive-images.js",
-  "scripts": {
-    "develop": "cd ./static/src && npm install",
-    "start": "cd ./server && npm start",
-    "build": "cd ./static && npm run build"
+  "main": "./generate-images.js",
+  "bin": "./bin/generate-responsive-images.js",
+  "scripts": {},
+  "engines": {
+    "node": ">=4.5.0"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.18.2",
     "commander": "^2.13.0",
-    "express": "^4.16.2",
     "mkdirp": "^0.5.1",
-    "mozjpeg": "^5.0.0",
-    "serve-static": "^1.13.1",
     "sharp": "^0.18.4"
   }
 }
