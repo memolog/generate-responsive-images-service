@@ -6,7 +6,7 @@ const sharp = require('sharp');
 const mkdirp = require('mkdirp');
 const defaultConfig = require('./default-config.json');
 
-function resizeImage(buffer, options, config) {
+function resizeImage(buffer, options) {
   return new Promise((fulfill, reject) => {
     const size = options.size;
     const name = options.name;
@@ -21,7 +21,7 @@ function resizeImage(buffer, options, config) {
     const filename = `${name}${sizeStr}${scaleStr}.${ext}`;
     const filePath = `${dist}/${relativePath}/${filename}`;
 
-    const sizeInt = parseInt(config.imageSize[size], 10);
+    const sizeInt = parseInt(options.imageSize[size], 10);
     if (!sizeInt) {
       reject(new Error('The size parameter is invalid'));
       return;
@@ -36,7 +36,7 @@ function resizeImage(buffer, options, config) {
         sharpObject = sharpObject.png();
         break;
       default:
-        const imageConfig = config.jpeg || {};
+        const imageConfig = options.jpeg || {};
         sharpObject = sharpObject.jpeg(imageConfig);
     }
 
@@ -51,17 +51,26 @@ function resizeImage(buffer, options, config) {
   });
 }
 
-module.exports = function generateImages(buffer, options, config){
+module.exports = function generateImages(buffer, options){
   return new Promise((fulfill, reject) => {
-    const conf = Object.assign(defaultConfig, (config || {}) );
-    const name = options.name;
+    const opts = Object.assign(defaultConfig, (options || {}) );
+    const name = opts.name;
+
     let dist, relativePath;
-    if (options.dist) {
-      relativePath = `${name}`;
-      dist = options.dist;
+    if (opts.dist) {
+      relativePath = opts.relativePath || `${name}`;
+      dist = opts.dist;
     } else {
-      relativePath = `images/${name}`
-      dist = path.resolve(__dirname, `../static/public`);
+      relativePath = opts.relativePath || `${name}`;
+      dist = path.resolve(__dirname, './');
+    }
+
+    if (opts.medium) {
+      opts.imageSize.medium = parseInt(opts.medium, 10) || opts.imageSize.medium;
+    }
+
+    if (opts.small) {
+      opts.imageSize.small = parseInt(opts.small, 10) || opts.imageSize.small;
     }
 
     mkdirp(`${dist}/${relativePath}`, (err) => {
@@ -71,14 +80,15 @@ module.exports = function generateImages(buffer, options, config){
       }
 
       const promises = [];
-      const conditions = conf.preset;
+      const conditions = opts.preset;
       for (const cond of conditions) {
         cond.name = name;
-        cond.ext = cond.ext || options.ext;
+        cond.ext = cond.ext || opts.ext;
         cond.scale = parseInt(cond.scale, 10) || 1;
         cond.dist = dist;
         cond.relativePath = relativePath;
-        promises.push(resizeImage(buffer, cond, conf));
+        cond.imageSize = opts.imageSize;
+        promises.push(resizeImage(buffer, cond));
       }
 
       Promise.all(promises)

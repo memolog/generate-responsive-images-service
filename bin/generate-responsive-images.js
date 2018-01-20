@@ -8,14 +8,16 @@ const program = require('commander');
 const generateImages = require('../generate-images');
 const pkg = require('../package.json');
 
-function readFileAndGenerate(filePath, dist) {
+function readFileAndGenerate(filePath, dist, small, medium) {
   return new Promise((fulfill, reject) => {
     fs.readFile(filePath, (err, buffer) => {
       const imagePath = path.parse(filePath);
       generateImages(buffer, {
         dist: dist,
         name: imagePath.name,
-        ext: imagePath.ext.replace(/^\./, '')
+        ext: imagePath.ext.replace(/^\./, ''),
+        small: small,
+        medium: medium
       }).then((filePaths) => {
         fulfill(filePaths);
       }).catch((err) => {
@@ -31,6 +33,8 @@ function main(args) {
     .option('-i, --input <file>')
     .option('-s, --src <directory>', 'Use files in the directory')
     .option('-d, --dist <dist>')
+    .option('--small <n>', 'Width for small image', parseInt)
+    .option('--medium <n>', 'Width for medium image', parseInt)
     .parse(args);
 
   let files = [];
@@ -53,7 +57,7 @@ function main(args) {
   const promises = [];
   const dist = path.resolve(process.cwd(), program.dist);
   for (const filePath of files) {
-    promises.push(readFileAndGenerate(filePath, dist));
+    promises.push(readFileAndGenerate(filePath, dist, program.small, program.medium));
   }
 
   Promise.all(promises)
