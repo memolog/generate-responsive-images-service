@@ -6,14 +6,13 @@
   "bin": "./bin/generate-responsive-images.js",
   "scripts": {},
   "engines": {
-    "node": ">=4.5.0"
+    "node": ">=23.8"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "commander": "^2.13.0",
-    "mkdirp": "^0.5.1",
-    "mozjpeg": "^5.0.0",
-    "sharp": "^0.18.4"
+    "commander": "^13.1.0",
+    "mkdirp": "^3.0.1",
+    "sharp": "^0.34.0"
   }
 }
