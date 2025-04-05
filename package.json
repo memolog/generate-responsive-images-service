@@ -1,12 +1,14 @@
 {
   "name": "generate-responsive-images",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "description": "Generate static responsive images from one image",
   "main": "./generate-images.js",
-  "bin": "./bin/generate-responsive-images.js",
+  "bin": {
+    "generate-responsive-images": "./bin/generate-responsive-images.js"
+  },
   "scripts": {},
   "engines": {
-    "node": ">=23.8"
+    "node": ">=22"
   },
   "author": "",
   "license": "ISC",

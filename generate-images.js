@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const mkdirp = require('mkdirp');
+const { mkdirp } = require('mkdirp');
 const defaultConfig = require('./default-config.json');
 
 function resizeImage(buffer, options) {
@@ -46,14 +46,14 @@ function resizeImage(buffer, options) {
           reject(err);
           return;
         }
-        fulfill({relativePath: `${relativePath}/${filename}`});
+        fulfill({ relativePath: `${relativePath}/${filename}` });
       });
   });
 }
 
-module.exports = function generateImages(buffer, options){
-  return new Promise((fulfill, reject) => {
-    const opts = Object.assign(defaultConfig, (options || {}) );
+module.exports = async function generateImages(buffer, options) {
+  return new Promise(async (fulfill, reject) => {
+    const opts = Object.assign(defaultConfig, options || {});
     const name = opts.name;
 
     let dist, relativePath;
@@ -73,11 +73,9 @@ module.exports = function generateImages(buffer, options){
       opts.imageSize.small = parseInt(opts.small, 10) || opts.imageSize.small;
     }
 
-    mkdirp(`${dist}/${relativePath}`, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
+    try {
+      // mkdirpのPromiseベースのAPIを使用
+      await mkdirp(`${dist}/${relativePath}`);
 
       const promises = [];
       const conditions = opts.preset;
@@ -91,14 +89,11 @@ module.exports = function generateImages(buffer, options){
         promises.push(resizeImage(buffer, cond));
       }
 
-      Promise.all(promises)
-        .then((results) => {
-          const relativePaths = results.map(result => result.relativePath);
-          fulfill(relativePaths);
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+      const results = await Promise.all(promises);
+      const relativePaths = results.map(result => result.relativePath);
+      fulfill(relativePaths);
+    } catch (err) {
+      reject(err);
+    }
   });
-}
+};
