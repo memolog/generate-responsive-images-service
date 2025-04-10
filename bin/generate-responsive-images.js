@@ -75,7 +75,7 @@ async function main(args) {
   const promises = [];
   const dist = path.resolve(process.cwd(), options.dist);
   for (const filePath of files) {
-    promises.push(readFileAndGenerate(filePath, dist, options.small, options.medium, options.webpOnly));
+    promises.push(readFileAndGenerate(filePath, dist, options.small, options.medium, options.webpOnly, options.clean));
   }
 
   try {
