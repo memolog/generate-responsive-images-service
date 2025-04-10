@@ -1,6 +1,6 @@
 {
   "name": "generate-responsive-images",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Generate static responsive images from one image",
   "main": "./generate-images.js",
   "bin": {

@@ -49,7 +49,8 @@ async function main(args) {
     .option('-s, --src <directory>', 'Use files in the directory')
     .option('--small <n>', 'Width for small image', parseInt)
     .option('--medium <n>', 'Width for medium image', parseInt)
-    .option('--webp-only', 'Generate only webp image');
+    .option('--webp-only', 'Generate only webp image')
+    .option('--clean', 'Remove existing files in the directory and then generate files');
 
   await program.parseAsync(args);
   const options = program.opts();
