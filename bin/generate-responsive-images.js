@@ -8,17 +8,18 @@ const { Command } = require('commander');
 const generateImages = require('../generate-images');
 const pkg = require('../package.json');
 
-function readFileAndGenerate(filePath, dist, small, medium, webpOnly) {
+function readFileAndGenerate(filePath, dist, small, medium, webpOnly, clean) {
   return new Promise((fulfill, reject) => {
     fs.readFile(filePath, (err, buffer) => {
       if (err) return reject(err);
       const imagePath = path.parse(filePath);
       const options = {
-        dist: dist,
+        dist,
         name: imagePath.name,
         ext: imagePath.ext.replace(/^\./, ''),
-        small: small,
-        medium: medium
+        small,
+        medium,
+        clean: !!clean,
       };
       if (webpOnly) {
         options.preset = [{
