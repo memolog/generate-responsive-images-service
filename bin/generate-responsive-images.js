@@ -8,18 +8,29 @@ const { Command } = require('commander');
 const generateImages = require('../generate-images');
 const pkg = require('../package.json');
 
-function readFileAndGenerate(filePath, dist, small, medium) {
+function readFileAndGenerate(filePath, dist, small, medium, webpOnly) {
   return new Promise((fulfill, reject) => {
     fs.readFile(filePath, (err, buffer) => {
       if (err) return reject(err);
       const imagePath = path.parse(filePath);
-      generateImages(buffer, {
+      const options = {
         dist: dist,
         name: imagePath.name,
         ext: imagePath.ext.replace(/^\./, ''),
         small: small,
         medium: medium
-      }).then((filePaths) => {
+      };
+      if (webpOnly) {
+        options.preset = [{
+          "size": "medium",
+          "ext": "webp"
+        }, {
+          "size": "medium",
+          "ext": "webp",
+          "scale": 2
+        }];
+      }
+      generateImages(buffer, options).then((filePaths) => {
         fulfill(filePaths);
       }).catch((err) => {
         reject(err);
@@ -37,7 +48,8 @@ async function main(args) {
     .option('-i, --input <file>', 'Input file')
     .option('-s, --src <directory>', 'Use files in the directory')
     .option('--small <n>', 'Width for small image', parseInt)
-    .option('--medium <n>', 'Width for medium image', parseInt);
+    .option('--medium <n>', 'Width for medium image', parseInt)
+    .option('--webp-only', 'Generate only webp image');
 
   await program.parseAsync(args);
   const options = program.opts();
@@ -62,7 +74,7 @@ async function main(args) {
   const promises = [];
   const dist = path.resolve(process.cwd(), options.dist);
   for (const filePath of files) {
-    promises.push(readFileAndGenerate(filePath, dist, options.small, options.medium));
+    promises.push(readFileAndGenerate(filePath, dist, options.small, options.medium, options.webpOnly));
   }
 
   try {
