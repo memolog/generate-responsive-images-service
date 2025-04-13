@@ -8,21 +8,20 @@ const { Command } = require('commander');
 const generateImages = require('../generate-images');
 const pkg = require('../package.json');
 
-function readFileAndGenerate(filePath, dist, small, medium, webpOnly, clean) {
+function readFileAndGenerate(filePath, dist, options) {
+  const { webpOnly } = options;
   return new Promise((fulfill, reject) => {
     fs.readFile(filePath, (err, buffer) => {
       if (err) return reject(err);
       const imagePath = path.parse(filePath);
-      const options = {
+      const opts = {
+        ...options,
         dist,
         name: imagePath.name,
         ext: imagePath.ext.replace(/^\./, ''),
-        small,
-        medium,
-        clean: !!clean,
       };
       if (webpOnly) {
-        options.preset = [{
+        opts.preset = [{
           "size": "medium",
           "ext": "webp"
         }, {
@@ -31,7 +30,7 @@ function readFileAndGenerate(filePath, dist, small, medium, webpOnly, clean) {
           "scale": 2
         }];
       }
-      generateImages(buffer, options).then((filePaths) => {
+      generateImages(buffer, opts).then((filePaths) => {
         fulfill(filePaths);
       }).catch((err) => {
         reject(err);
@@ -51,7 +50,9 @@ async function main(args) {
     .option('--small <n>', 'Width for small image', parseInt)
     .option('--medium <n>', 'Width for medium image', parseInt)
     .option('--webp-only', 'Generate only webp image')
-    .option('--clean', 'Remove existing files in the directory and then generate files');
+    .option('--clean', 'Remove existing files in the directory and then generate files')
+    .option('--crop-width <n>', 'Width for cropping', parseInt)
+    .option('--crop-height <n>', 'Height for cropping', parseInt);
 
   await program.parseAsync(args);
   const options = program.opts();
@@ -76,7 +77,7 @@ async function main(args) {
   const promises = [];
   const dist = path.resolve(process.cwd(), options.dist);
   for (const filePath of files) {
-    promises.push(readFileAndGenerate(filePath, dist, options.small, options.medium, options.webpOnly, options.clean));
+    promises.push(readFileAndGenerate(filePath, dist, options));
   }
 
   try {

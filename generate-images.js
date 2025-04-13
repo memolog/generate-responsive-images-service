@@ -7,13 +7,9 @@ const { mkdirp } = require("mkdirp");
 const defaultConfig = require("./default-config.json");
 
 function resizeImage(buffer, options) {
-  return new Promise((fulfill, reject) => {
-    const size = options.size;
-    const name = options.name;
-    const ext = options.ext;
-    const scale = options.scale;
-    const dist = options.dist;
-    const relativePath = options.relativePath;
+  return new Promise(async (fulfill, reject) => {
+    const { size, name, ext, scale, dist, relativePath } = options;
+    let {cropWidth, cropHeight } = options;
 
     const sizeStr = `_${size}`;
     const scaleStr = scale === 1 ? "" : `@${scale}x`;
@@ -27,7 +23,25 @@ function resizeImage(buffer, options) {
       return;
     }
 
-    let sharpObject = sharp(buffer).resize(sizeInt * scale);
+    let sharpObject = sharp(buffer);
+    const { width, height } = await sharpObject.metadata();
+
+    if (cropWidth || cropHeight) {
+      cropWidth = cropWidth || width;
+      cropHeight = cropHeight || height;
+
+      const left = Math.floor((width - cropWidth) / 2);
+      const top = Math.floor((height - cropHeight) / 2);
+
+      sharpObject = sharpObject.extract({
+        left,
+        top,
+        width: cropWidth,
+        height: cropHeight
+      });
+    }
+
+    sharpObject.resize(sizeInt * scale);
     switch (ext) {
       case "webp":
         sharpObject = sharpObject.webp();
@@ -98,6 +112,8 @@ module.exports = async function generateImages(buffer, options) {
         cond.dist = dist;
         cond.relativePath = relativePath;
         cond.imageSize = opts.imageSize;
+        cond.cropWidth = opts.cropWidth;
+        cond.cropHeight = opts.cropHeight;
         promises.push(resizeImage(buffer, cond));
       }
 
