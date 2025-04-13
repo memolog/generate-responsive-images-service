@@ -8,10 +8,9 @@ const defaultConfig = require("./default-config.json");
 
 function resizeImage(buffer, options) {
   return new Promise(async (fulfill, reject) => {
-    const { size, name, ext, scale, dist, relativePath } = options;
+    const { size, name, ext, scale, dist, relativePath, sizeString } = options;
     let {cropWidth, cropHeight } = options;
-
-    const sizeStr = `_${size}`;
+    const sizeStr = sizeString ? `_${size}` : "";
     const scaleStr = scale === 1 ? "" : `@${scale}x`;
 
     const filename = `${name}${sizeStr}${scaleStr}.${ext}`;
@@ -114,6 +113,7 @@ module.exports = async function generateImages(buffer, options) {
         cond.imageSize = opts.imageSize;
         cond.cropWidth = opts.cropWidth;
         cond.cropHeight = opts.cropHeight;
+        cond.sizeString = opts.sizeString;
         promises.push(resizeImage(buffer, cond));
       }
 

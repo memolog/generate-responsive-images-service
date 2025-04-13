@@ -52,7 +52,8 @@ async function main(args) {
     .option('--webp-only', 'Generate only webp image')
     .option('--clean', 'Remove existing files in the directory and then generate files')
     .option('--crop-width <n>', 'Width for cropping', parseInt)
-    .option('--crop-height <n>', 'Height for cropping', parseInt);
+    .option('--crop-height <n>', 'Height for cropping', parseInt)
+    .option('--no-size-string', 'Do not add size string to the filename');
 
   await program.parseAsync(args);
   const options = program.opts();
