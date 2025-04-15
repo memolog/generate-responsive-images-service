@@ -22,35 +22,30 @@ function resizeImage(buffer, options) {
       return;
     }
 
-    let sharpObject = sharp(buffer);
+    const sharpObject = sharp(buffer);
     const { width, height } = await sharpObject.metadata();
 
     if (cropWidth || cropHeight) {
-      cropWidth = cropWidth || width;
-      cropHeight = cropHeight || height;
-
-      const left = Math.floor((width - cropWidth) / 2);
-      const top = Math.floor((height - cropHeight) / 2);
-
-      sharpObject = sharpObject.extract({
-        left,
-        top,
-        width: cropWidth,
-        height: cropHeight
+      cropWidth = (cropWidth || width) * scale;
+      cropHeight = (cropHeight || height) * scale;
+      sharpObject.resize(cropWidth, cropHeight, {
+        fit: "cover",
+        position: "center"
       });
+    } else {
+      sharpObject.resize(sizeInt * scale);
     }
 
-    sharpObject.resize(sizeInt * scale);
     switch (ext) {
       case "webp":
-        sharpObject = sharpObject.webp();
+        sharpObject.webp();
         break;
       case "png":
-        sharpObject = sharpObject.png();
+        sharpObject.png();
         break;
       default:
         const imageConfig = options.jpeg || {};
-        sharpObject = sharpObject.jpeg(imageConfig);
+        sharpObject.jpeg(imageConfig);
     }
 
     sharpObject.toFile(filePath, (err) => {
